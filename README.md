@@ -258,3 +258,333 @@ Esto creará todas las tablas en la base de datos PostgreSQL que configuraste.
 `
 ### 2.4. Panel de Administrador de Django
 
+Una de las características más potentes de Django es su panel de administración automático. Es una interfaz web profesional y lista para usar que te permite a ti (como administrador del sitio) gestionar el contenido de tu aplicación.
+Vamos a hacer que nuestro modelo Task aparezca en este panel.
+
+#### Paso 1: Resgistrar el modelo Task en el Admin
+Para que un modelo sea visible y gestionable en el panel de administrador, tienes que registrarlo explícitamente.
+1. Abre el archivo **api/admin.py**
+2. Importa tu modelo Task y regístralo usando **admin.site.register():**
+
+```python
+# api/admin.py
+from django.contrib import admin
+from .models import Task # Importamos el modelo Task
+
+admin.site.register(Task)
+```
+Con estas dos líneas de código, le has dicho a Django que cree una interfaz completa para gestionar tareas.
+
+#### Paso 2: Crear un superusuario
+Para poder acceder al panel de administrador, necesitas una cuenta de usuario con permisos de administrador.
+- En tu terminal ejecuta el siguiente comando:
+`python manage.py createsuperuser`
+
+- El sistema te pedira que introduzcas:
+		Nombre de usuario: Elige uno (ej: admin).
+		Dirección de correo electrónico: Puedes poner una real o una de prueba.
+		Contraseña: Escribe una contraseña. Por seguridad, no verás los caracteres mientras escribes.
+		Confirmar contraseña: Vuelve a escribirla.
+
+Si todo ha ido bien, verás un mensaje de "Superuser created successfully."
+
+#### Paso 3: Explorar el Panel de Administración de Django
+Esta es la parte divertida y donde realmente puedes empezar a ver el potencial de Django, su escalabilidad, su robustez y el control que le da al desarrollador.
+- Levanta el servidor de desarrollo (si no lo tenías ya funcionando):
+`python manage.py runserver`
+- Abre tu navegador web y ve a la siguiente URL: http://127.0.0.1:8000/admin/
+- Verás la página de inicio de sesión del administrador de Django. Usa el nombre de usuario y la contraseña que acabas de crear.
+
+¡Ya estás dentro! Verás una sección llamada "API" con un enlace a "Tasks".
+
+Desde aquí, podremos directamente crear nuevas tasks, eliminarlas, editarlas, etc...
+**Haz clic en "Tasks" y luego en el botón "Add task +" de la esquina superior derecha.**
+
+Puedes crear tu primera tarea usando el formulario que Django ha generado automáticamente a partir de tu modelo. Rellena el título, la descripción (si quieres) y verás cómo los campos *completed* y *created_at* se comportan como definimos.
+Esto es ideal para administrar tu aplicación sin necesidad de crear interfaces de gestión desde cero.
+
+Además, nosotros podemos personalizar nuestra interfaz de adminsitración para mostrar los datos que más nos interesan.
+Por ejemplo, podemos especificar que campos del modelo se muestren, los campos de búsqueda y los filtros que podemos aplicar. Vamos a mostrar en el listado de tareas los campos "title", "completed" y "created_at", vamos a decirle al panel de adminsitración que nos permita buscar las tareas por su campo "title" y vamos a decirle que queremos tener la opción de filtrar por tareas completadas.
+
+Abre tu archivo **api/admin.py** y modifícalo para que se vea así:
+```python
+# api/admin.py
+from django.contrib import admin
+from .models import Task
+
+class TaskAdmin(admin.ModelAdmin):
+    """
+    Personaliza la vista de lista y el formulario de edición para el modelo Task.
+    """
+    list_display = ('title', 'completed', 'created_at')
+    search_fields = ('title',)
+    list_filter = ('completed',)
+
+# Registra el modelo Task con la clase de personalización TaskAdmin
+admin.site.register(Task, TaskAdmin)
+```
+
+**¿Qué Has Hecho Exactamente?**
+Al crear la clase **TaskAdmin** que hereda de **admin.ModelAdmin**, le estás diciendo a Django: "Oye, para el modelo Task, no uses la vista de administrador por defecto, usa esta configuración personalizada".
+
+- list_display
+> Muestra estas columnas en la lista de tareas. Es mucho más útil que ver solo el título.
+
+- search_fields
+> Añade una barra de búsqueda en la parte superior que buscará por el campo title.
+
+- list_filter
+> Añade una barra lateral para filtrar rápidamente las tareas (por ejemplo, ver solo las completadas o las pendientes).
+
+#### Alternativa con decoradores
+Una forma más moderna y "Pythonica" de hacer exactamente lo mismo es usando un decorador. Es más conciso y muchos desarrolladores lo prefieren.
+```python
+# api/admin.py
+from django.contrib import admin
+from .models import Task
+
+@admin.register(Task)
+class TaskAdmin(admin.ModelAdmin):
+    list_display = ('title', 'completed', 'created_at')
+    search_fields = ('title',)
+    list_filter = ('completed',)
+```
+
+Ambas formas son 100% correctas y funcionales. Elige la que más te guste.
+
+Ahora, si vuelves a ejecutar tu servidor (python manage.py runserver) y visitas la página de administración de Tareas, verás una interfaz mucho más rica y útil.
+
+### 2.5. Tu Primera API con Django REST Framework
+Django REST Framework (DRF) es un kit de herramientas que se integra con Django para construir APIs web de forma rápida y flexible. Se encarga del trabajo pesado de convertir tus datos a formato JSON, gestionar la autenticación, los permisos y mucho más.
+
+Nuestro objetivo: crear un endpoint (una URL de la API) en /api/tasks/ que devuelva una lista de todas nuestras tareas.
+
+#### Paso 1: Instalar y configurar DRF
+- Detén tu servidor (si está funcionando) y, en la terminal, instala la librería:
+`pip install djangorestframework`
+
+- Ahora, al igual que hicimos con nuestra app api, debemos registrar DRF en nuestro proyecto. Abre mysite/settings.py y añade 'rest_framework' a la lista de INSTALLED_APPS.
+
+		# mysite/settings.py
+		INSTALLED_APPS = [
+    		# ... otras apps
+   			 'api',
+
+   		 # Apps de terceros
+   		 'rest_framework',
+		]
+
+#### Paso 2:  El Serializer (El traductor de datos)
+Un Serializer en DRF traduce datos complejos, como los objetos de nuestro modelo Task, a un formato que se puede enviar fácilmente por internet, como JSON. También hace el trabajo inverso: valida y convierte datos JSON en objetos de Django.
+
+- Crea un nuevo archivo en tu app: api/serializers.py.
+- Añade el siguiente código:
+		# api/serializers.py
+		from rest_framework import serializers
+		from .models import Task
+
+		class TaskSerializer(serializers.ModelSerializer):
+    		class Meta:
+        		model = Task
+        		fields = '__all__' # Incluye todos los campos del modelo
+
+Con ModelSerializer, DRF crea automáticamente un serializador con los campos que coinciden con los de nuestro modelo Task. ¡Es así de simple!
+
+#### Paso 3: La Vista (La lógica de la API)
+La vista se encarga de recibir una petición web y devolver una respuesta. Usaremos una de las "vistas genéricas" de DRF que nos ahorra escribir código repetitivo.
+
+- Modifica tu archivo api/views.py:
+		# api/views.py
+		from rest_framework import generics
+		from .models import Task
+		from .serializers import TaskSerializer
+
+		class TaskViewSet(generics.ListAPIView):
+    		queryset = Task.objects.all()
+    		serializer_class = TaskSerializer
+
+- **generics.ListAPIView**
+> Es una vista pre-construida por DRF para manejar peticiones que listan un conjunto de objetos.
+
+- **queryset**
+> Le dice a la vista qué objetos debe obtener de la base de datos (todos los objetos Task).
+
+- **serializer_class**
+> Le dice a la vista qué serializador debe usar para traducir esos objetos.
+
+#### Paso 4: La URL (La puerta de entrada)
+Finalmente, necesitamos conectar una URL a la vista que acabamos de crear.
+- Crea un archivo urls.py dentro de tu app api. Este es el lugar correcto para las URLs específicas de la API.
+		# api/urls.py
+		from django.urls import path
+		from .views import TaskViewSet
+
+		urlpatterns = [
+    		path('tasks/', TaskViewSet.as_view(), name='task-list'),
+		]
+
+- Ahora, dile al proyecto principal que tenga en cuenta las URLs de tu app api. Modifica el archivo principal mysite/urls.py:
+
+		# mysite/urls.py
+		from django.contrib import admin
+		from django.urls import path, include # ¡Asegúrate de que 'include' esté importado!
+
+		urlpatterns = [
+    		path('admin/', admin.site.urls),
+    		path('api/', include('api.urls')), # Incluye las URLs de la app 'api'
+		]
+
+#### Paso 5: Prueba tu API
+- Arranca el servidor:
+`python manage.py runserver`
+
+- Abre tu navegador y ve a: http://127.0.0.1:8000/api/tasks/
+
+Verás la Browsable API de DRF, una interfaz web que te muestra tus datos en formato JSON y te permite interactuar con tu API directamente desde el navegador. ¡Deberías ver las tareas que creaste en el panel de administrador!
+
+¡Lo has conseguido! Has creado tu primer endpoint de solo lectura. Una aplicación externa ya podría "leer" tus tareas.
+
+### 2.6. Crear tareas a través de la API
+Ahora que ya podemos leer la lista de tareas (GET), el siguiente paso es poder crear nuevas tareas enviando datos a la API (peticiones POST). Gracias a Django REST Framework, esto es increíblemente sencillo.
+
+#### Paso 1: Actualizar la Vista
+Solo tenemos que hacer un pequeño cambio en api/views.py. Vamos a cambiar la vista ListAPIView (que solo permite listar) por ListCreateAPIView (que permite listar y crear).
+- Abre tu archivo api/views.py.
+- Modifica la clase de la que hereda tu vista:
+		# api/views.py
+		from rest_framework import generics
+		from .models import Task
+		from .serializers import TaskSerializer
+
+		# Cambia ListAPIView por ListCreateAPIView
+		class TaskViewSet(generics.ListCreateAPIView):
+    		queryset = Task.objects.all()
+    		serializer_class = TaskSerializer
+
+#### Paso 2: Probar el endpoint
+- Asegúrate de que el servidor está corriendo.
+- Refresca la página en tu navegador: http://127.0.0.1:8000/api/tasks/
+
+Ahora verás algo nuevo y muy potente: en la parte inferior de la API Navegable, aparecerá un formulario HTML. Puedes usar ese formulario para rellenar los datos de una nueva tarea y enviarla con un POST.
+
+¡Pruébalo! Crea una nueva tarea desde el navegador. Verás cómo, tras enviarla, la página se recarga y tu nueva tarea aparece en la lista JSON de arriba.
+
+¡Felicidades, tu API ahora puede leer y escribir datos! 
+
+En el desarrollo de APIs, esto se conoce como CRUD (Create, Read, Update, Delete). Ya tenemos la "C" (Crear) y la "R" (Leer la lista). Ahora vamos a por la "U" (Actualizar) y la "D" (Borrar), además de leer un solo elemento.
+
+### 2.7. Detalle, Actualización y Borrado (CRUD completo)
+Para poder ver, modificar o borrar una tarea específica, necesitamos un nuevo "endpoint" que identifique esa tarea, como /api/tasks/1/. A esto se le llama una vista de detalle.
+
+DRF nos lo pone muy fácil con otra vista genérica.
+
+#### Paso 1: Crear la Vista de Detalle
+Vamos a añadir una nueva vista en api/views.py. Esta única vista se encargará de recuperar (GET), actualizar (PUT/PATCH) y eliminar (DELETE) un objeto individual.
+- Abre api/views.py.
+- Añade esta nueva clase:
+		# api/views.py
+		from rest_framework import generics
+		from .models import Task
+		from .serializers import TaskSerializer
+
+		class TaskViewSet(generics.ListCreateAPIView):
+    		queryset = Task.objects.all()
+    		serializer_class = TaskSerializer
+
+		# NUEVA VISTA
+		class TaskRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
+    		queryset = Task.objects.all()
+    		serializer_class = TaskSerializer
+
+Como ves, la configuración es idéntica. DRF se encarga de la lógica interna para manejar un solo objeto en lugar de una lista.
+
+#### Paso 2: Añadir la Nueva URL
+Ahora necesitamos conectar esta nueva vista a una URL que pueda capturar el ID de la tarea.
+- Abre api/urls.py.
+- Añade un nuevo path a la lista urlpatterns:
+		# api/urls.py
+		from django.urls import path
+		from .views import TaskListCreateAPIView, TaskRetrieveUpdateDestroyAPIView # 			Importa la nueva vista
+
+		urlpatterns = [
+    		path('tasks/', TaskListCreateAPIView.as_view(), name='task-list-create'),
+    		# NUEVA RUTA
+    		path('tasks/<int:pk>/', TaskRetrieveUpdateDestroyAPIView.as_view(), name='task-			detail'),
+		]
+
+La parte clave aquí es <int:pk>. Esto le dice a Django que espere un número entero en esa parte de la URL y que se lo pase a la vista como un argumento llamado pk (de Primary Key). Así es como la vista sabe qué tarea específica tiene que buscar.
+
+#### Paso 3: Probar la API Completa
+- Asegúrate de que tu servidor está corriendo
+`python manage.py runserver`
+- Ve en tu navegador a la URL de una de las tareas que ya has creado, por ejemplo: http://127.0.0.1:8000/api/tasks/1/
+
+Ahora verás la página de la API Navegable para esa tarea individual. Desde ahí puedes:
+
+- Ver sus datos en formato JSON.
+- Usar el formulario para modificarla (PUT).
+- Hacer clic en el botón "DELETE" para borrarla.
+
+¡Felicidades! Has construido una API REST completamente funcional con todas las operaciones CRUD. Has sentado la base fundamental sobre la que se construyen todas las APIs complejas.
+
+Sin embargo, este tan solo es un ejemplo creado para que podamos entender como funciona un CRUD en una API REST. Si queremos seguir buenas prácticas, hacerlo de una forma más profesional y eficiente podemos hacerlo de otra manera.
+
+### 2.8. Refactorizando a ViewSets y Routers (+ profesional)
+Un ViewSet es una clase que agrupa toda la lógica de un recurso (en nuestro caso, las Tareas). Usaremos un ModelViewSet, que nos da toda la funcionalidad CRUD (list, create, retrieve, update, destroy) de forma gratuita.
+
+Esto se combina con un Router, que genera automáticamente las URLs por nosotros.
+
+#### Paso 1: Simplificar las Vistas (api/views.py)
+Sí, por supuesto. Esa es exactamente la forma más profesional y eficiente de hacerlo, y es el tema de esta lección.
+
+Lo que hemos hecho hasta ahora ha sido el método "manual" para que entendieras las piezas. Ahora, vamos a usar la herramienta que Django REST Framework (DRF) provee para combinar todo el CRUD en una sola clase: el ViewSet.
+
+## Lección 7: Refactorizando a ViewSets y Routers
+Un ViewSet es una clase que agrupa toda la lógica de un recurso (en nuestro caso, las Tareas). Usaremos un ModelViewSet, que nos da toda la funcionalidad CRUD (list, create, retrieve, update, destroy) de forma gratuita.
+
+Esto se combina con un Router, que genera automáticamente las URLs por nosotros.
+
+Paso 1: Simplificar las Vistas (api/views.py)
+Vamos a reemplazar nuestras dos clases (TaskViewSet y TaskRetrieveUpdateDestroyAPIView) por una sola TaskViewSet.
+
+- Abre api/views.py y reemplaza todo su contenido con esto:
+		# api/views.py
+		from rest_framework import viewsets
+		from .models import Task
+		from .serializers import TaskSerializer
+
+		class TaskViewSet(viewsets.ModelViewSet):
+    		"""
+    		Una única ViewSet para ver, editar y eliminar tareas.
+    		"""
+    		queryset = Task.objects.all()
+    		serializer_class = TaskSerializer
+
+¡Y ya está! Esta única clase ahora maneja todas las operaciones.
+
+#### Paso 2: Simplificar las URLs (api/urls.py)
+Como un ViewSet no es una vista estándar, no podemos conectarlo con path(). Necesitamos un Router que genere las URLs por nosotros.
+
+- Abre api/urls.py y reemplaza todo su contenido con esto:
+		# api/urls.py
+		from django.urls import path, include
+		from rest_framework.routers import DefaultRouter
+		from .views import TaskViewSet
+
+		# Crea un router y registra nuestro viewset con él.
+		router = DefaultRouter()
+		router.register(r'tasks', TaskViewSet, basename="task")
+
+		# Las URLs de la API son determinadas automáticamente por el router.
+		urlpatterns = [
+    		path('', include(router.urls)),
+		]
+
+Este DefaultRouter genera automáticamente las mismas dos URLs que creamos antes a mano:
+
+- /tasks/ (para listar y crear)
+- /tasks/<pk>/ (para ver, actualizar y borrar)
+
+¡Felicidades! Acabas de refactorizar tu código a la forma más común y recomendada de construir APIs con DRF. Has reemplazado dos vistas y dos rutas URL manuales por una ViewSet y un Router, logrando la misma funcionalidad con mucho menos código.
+
+Si ahora pruebas tus endpoints (http://127.0.0.1:8000/api/tasks/ y http://127.0.0.1:8000/api/tasks/1/), verás que todo sigue funcionando exactamente igual.
