@@ -1,0 +1,662 @@
+<h1 id="curso-django">Curso Django</h1>
+<h2 id="creación-del-entorno-virtual-e-instalación-de-django">1.
+Creación del entorno virtual e instalación de Django</h2>
+<p>Lo primero de todo es crear un entorno virtual en nuestra carpeta de
+trabajo. En este caso vamos a llamar a nuestra carpeta de trabajo
+“django-crash-course”.</p>
+<p>Al estar trabajando con Python, el comando para crear un nuevo
+entorno de trabajo es: <code>python -m venv {venv}</code> - {venv} –&gt;
+Lo sustituimos con el nombre que queramos. En mi caso
+<strong>.env</strong></p>
+<h3 id="activación-del-entorno-virtual">1.1. Activación del entorno
+virtual</h3>
+<p>Para la instalación y gestión de los paquetes de nuestro proyecto
+debemos activar nuestro entorno virtual. Dependiendo de nuestro SO, el
+comando puede variar: &gt; CMD
+<code>venv\Scripts\activate.bat</code></p>
+<blockquote>
+<p>Poweshell <code>venv\Scripts\Activate.ps1</code></p>
+</blockquote>
+<blockquote>
+<p>Git Bash <code>source venv/Scripts/activate</code></p>
+</blockquote>
+<p>Nosotros estamos trabajando en Windows, con una terminal CMD. Por lo
+que nuestro comando es: <code>.env\Scripts\activate</code></p>
+<p>Si lo hemos hecho bien, nuestra terminal deberá aparecer de la
+siguiente manera: &gt; (.env) PS D:-crash-course&gt;</p>
+<h3 id="instalación-de-django">1.2. Instalación de Django</h3>
+<p>Una vez que tenemos activado nuestro entorno virtual, podemos
+instalar las dependencias necesarias en nuestro proyecto. Django no
+viene instalado por defceto en Python ,por lo que tendremos que
+descargarlo e instalarlo usando el gestor de paquetes
+<strong>pip</strong></p>
+<p>En la terminal lanzamos el siguiente comando:
+<code>pip install django</code></p>
+<p>Automáticamente, Django y todas sus dependencias se descargarán y se
+isntalarán en nuestro entorno virtual y ya podremos empezar a usar
+Django :)</p>
+<h2 id="primeros-pasos-con-django">2. Primeros pasos con Django</h2>
+<h3 id="creación-de-un-proyecto-en-django">2.1. Creación de un proyecto
+en Django</h3>
+<p>Una vez que hemos instalado Django en nuestro entorno virtual,
+podemos crear nuestro primer proyecto. Podemos comprobar que Django se
+ha instalado correctamente deesta manera:
+<code>python -m django --version</code></p>
+<p>El siguiente paso es crear nuestro proyecto, directamente desde la
+terminal: <code>django-admin startproject mysite</code></p>
+<p>Ester comando lo que hará será crear un proyecto de Django llamado
+<strong>mysite</strong>. &gt; Debes evitar nombrar proyectos con nombres
+de componentes integrados de Python o Django. Esto significa que debes
+evitar usar nombres como django(que entrará en conflicto con el propio
+Django) o test(que entra en conflicto con un paquete integrado de
+Python).</p>
+<p>En mi caso, a la misma altura que el .env, he creado una carpeta
+nueva llamada <strong>“django-crash-course”</strong> y después he
+utilizado el siguiente comando:
+<code>django-admin startproject mysite django-crash-course</code></p>
+<p>De esta manera, se ha creado mi proyecto de Django de nombre
+<strong>mysite</strong>, dentro de la carpeta
+<strong>“django-crash-course”</strong>.</p>
+<p>Automáticamente se habrá creado mi estructura principal del proyecto:
+- djangotutorial/ - manage.py - mysite/ - <strong>init</strong>.py -
+settings.py - urls.py - asgi.py - wsgi.py</p>
+<p>Estos archivos son:</p>
+<ul>
+<li><p>manage.py –&gt; Una utilidad de línea de comandos que te permite
+interactuar con este proyecto de Django de diversas maneras. Puedes leer
+todos los detalles manage.py en django-admin y manage.py .</p></li>
+<li><p>mysite/ –&gt; Un directorio que contiene el paquete de Python de
+tu proyecto. Su nombre es el nombre del paquete de Python que
+necesitarás para importar cualquier contenido (por ejemplo,
+mysite.urls).</p></li>
+<li><p>mysite/<strong>init</strong>.py –&gt; Un archivo vacío que indica
+a Python que este directorio debe considerarse un paquete. Si eres
+principiante en Python, lee más sobre paquetes en la documentación
+oficial de Python.</p></li>
+<li><p>mysite/settings.py –&gt; Configuración de este proyecto de
+Django. La configuración de Django te explicará todo sobre su
+funcionamiento.</p></li>
+<li><p>mysite/urls.py –&gt; Las declaraciones de URL de este proyecto de
+Django; una tabla de contenido de tu sitio web basado en
+Django.</p></li>
+<li><p>mysite/asgi.py –&gt; Un punto de entrada para servidores web
+compatibles con ASGI que atiendan tu proyecto.</p></li>
+<li><p>mysite/wsgi.py –&gt; Un punto de entrada para servidores web
+compatibles con WSGI que atiendan tu proyecto.</p></li>
+</ul>
+<p>Ya tendríamos Django listo, y si ejecutamos dentro de nuestra nueva
+carpeta el siguiente comando, podremos comprobar que nuestra aplicación
+ya está corriendo: <code>python manage.py runserver</code></p>
+<p>Por defecto, como buen backend, esto se ejecuta en la ruta
+http://127.0.0.1:8000/; pero podemos cambiar el puerto de esta manera:
+<code>python manage.py runserver 8001</code></p>
+<p>Así, podemos especificar el puerto en el que correr nuestra
+aplicación.</p>
+<h3 id="proyectos-vs.-apps-y-tu-primera-app">2.2 . Proyectos vs. Apps y
+tu primera App</h3>
+<p>Perfecto, ya has creado el proyecto mysite. Ahora toca entender uno
+de los conceptos más importantes de Django: la diferencia entre un
+Proyecto y una App.</p>
+<ul>
+<li><p><strong>Proyecto Django</strong>: Piensa en el proyecto como el
+contenedor de todo tu sitio web. Gestiona la configuración global
+(settings.py), las rutas URL principales (urls.py) y agrupa una o más
+“apps”.</p></li>
+<li><p><strong>App Django</strong>: Una “app” es un módulo autocontenido
+que realiza una función específica. Por ejemplo, podrías tener una app
+para los usuarios, otra para los productos, y otra para los pedidos. Las
+apps están diseñadas para ser reutilizables.</p></li>
+</ul>
+<p>Nuestro objetivo es crear una API, así que vamos a crear una app
+dedicada a gestionar toda la lógica de la API.</p>
+<h4 id="paso-1-crear-nuestra-primera-app">Paso 1: Crear nuestra primera
+app</h4>
+<ol type="1">
+<li>Abre tu terminal.</li>
+<li>Asegúrate de que estás dentro de la carpeta de tu proyecto, al mismo
+nivel que el archivo manage.py.</li>
+<li>Ejecuta el siguiente comando para crear una app llamada
+<strong>api</strong>: <code>python manage.py startapp api</code></li>
+</ol>
+<p>Ahora, si miras tu estructura de carpetas, verás que ha aparecido un
+nuevo directorio llamado api con varios archivos dentro (models.py,
+views.py, etc.). ¡Esa es tu primera app!</p>
+<h4 id="paso-2-registrar-la-app-en-el-proyecto">Paso 2: Registrar la App
+en el proyecto</h4>
+<p>Crear la app no es suficiente; debemos decirle a nuestro proyecto
+mysite que esta nueva app api existe y que debe tenerla en cuenta.</p>
+<ol type="1">
+<li>Abre el archivo mysite/settings.py.</li>
+<li>Busca la lista llamada <strong>INSTALLED_APPS</strong>.</li>
+<li>Añade el nombre de tu app (‘api’) al final de la lista. Te
+recomiendo añadir un comentario para saber cuáles son tus apps
+locales.</li>
+<li>Guarda el archivo.</li>
+</ol>
+<p>A mi personalmente me gusta diferenciar dentro de esta lista que apps
+son “base”, cuales son mías, y cuales son de terceros. Las veremos más
+adelante. De maenra que se vería así:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># mysite/settings.py</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>INSTALLED_APPS <span class="op">=</span> [</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;django.contrib.admin&#39;</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;django.contrib.auth&#39;</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;django.contrib.contenttypes&#39;</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;django.contrib.sessions&#39;</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;django.contrib.messages&#39;</span>,</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;django.contrib.staticfiles&#39;</span>,</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># My Apps</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;api&#39;</span>,</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Third Apps</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>]</span></code></pre></div>
+<p>¡Felicidades! Has creado y registrado correctamente tu primera
+aplicación. Este es el flujo de trabajo fundamental para añadir nuevas
+funcionalidades a cualquier proyecto de Django.</p>
+<h3 id="tu-primer-modelo-y-las-migraciones">2.3. Tu Primer Modelo y las
+Migraciones</h3>
+<p>En Django, un Modelo es la única y definitiva fuente de información
+sobre tus datos. Es una clase de Python que representa una tabla en tu
+base de datos. Django usa estos modelos para crear las tablas y para
+interactuar con ellas (leer, escribir, actualizar, etc.).</p>
+<p>Para nuestro proyecto, vamos a crear un modelo simple pero muy común:
+una Tarea (Task).</p>
+<h4 id="paso-1-creando-el-modelo-task">Paso 1: Creando el Modelo
+“Task”</h4>
+<ol type="1">
+<li><p>Abre el archivo api/models.py. Por defecto, estará casi
+vacío.</p></li>
+<li><p>Reemplaza su contenido con el siguiente código para definir
+nuestro modelo Task:</p>
+<p># api/models.py from django.db import models</p>
+<p>class Task(models.Model): title = models.CharField(max_length=200)
+description = models.TextField(blank=True, null=True) completed =
+models.BooleanField(default=False) created_at =
+models.DateTimeField(auto_now_add=True)</p>
+<pre><code> def __str__(self):
+     return self.title</code></pre></li>
+</ol>
+<ul>
+<li><p><strong>class Task(models.Model)</strong> –&gt; Define una clase
+llamada Task que hereda de <strong>models.Model</strong>. Así es como
+Django sabe que esto es un modelo.</p></li>
+<li><p><strong>title = models.CharField(…)</strong> –&gt; Un campo de
+texto para el título. max_length=200 es obligatorio para los
+CharField.</p></li>
+<li><p><strong>description = models.TextField(…)</strong> –&gt; Un campo
+para textos largos. blank=True, null=True significa que este campo es
+opcional.</p></li>
+<li><p><strong>completed = models.BooleanField(…)</strong>: Un campo que
+será True o False. Por defecto (default=False), las tareas se crearán
+como no completadas.</p></li>
+<li><p><strong>created_at = models.DateTimeField(…)</strong>: Un campo
+de fecha y hora. auto_now_add=True le dice a Django que guarde la fecha
+y hora actual automáticamente cuando se cree una nueva tarea.</p></li>
+<li><p><strong>def <strong>str</strong>(self):</strong>: Este método
+especial le dice a Django cómo “mostrar” un objeto <strong>Task</strong>
+de forma legible (por ejemplo, en el panel de administrador). Aquí, le
+decimos que muestre el título de la tarea.</p></li>
+</ul>
+<h4
+id="paso-2-las-migraciones-el-control-de-versiones-de-tu-base-de-datos">Paso
+2: Las Migraciones (el ‘Control de Versiones’ de tu Base de Datos)</h4>
+<p>Ahora que hemos definido el modelo en Python, necesitamos traducir
+esa definición a un formato que la base de datos entienda (lenguaje SQL)
+y aplicarlo. Este proceso se hace en dos pasos.</p>
+<ol type="1">
+<li><strong>Crear el archivo de migración</strong>: Este comando analiza
+tus models.py, detecta los cambios (en este caso, la creación del modelo
+Task) y genera un archivo de instrucciones en la carpeta
+api/migrations/.</li>
+</ol>
+<p>Abre tu terminal (asegúrate de estar en la carpeta del proyecto con
+manage.py) y ejecuta: <code>python manage.py makemigrations</code></p>
+<blockquote>
+<p>Verás una salida parecida a: Migrations for ‘api’:
+api/migrations/0001_initial.py.</p>
+</blockquote>
+<p><strong>Aplicar la migración a la base de datos</strong>: Este
+comando toma todos los archivos de migración que no se han aplicado y
+los ejecuta contra la base de datos, creando las tablas y columnas
+necesarias.</p>
+<p>Ejecuta el siguiente comando: <code>python manage.py migrate</code>
+Django aplicará no solo tu migración, sino también las migraciones
+iniciales de las otras apps que vienen por defecto (admin, auth,
+etc.).</p>
+<p>¡Excelente! Has definido la estructura de tus datos y has creado la
+tabla correspondiente en la base de datos sin escribir una sola línea de
+SQL.</p>
+<p>Y te preguntarás, ¿Cómo puede funcionar esto si no he creado ninguna
+base de datos, ni ninguna conexión, no he escrito SQL…? Muy
+sencillo.</p>
+<p>En Django no necesitas crear manualmente la base de datos ni escribir
+SQL al principio porque Django está diseñado para abstraer y automatizar
+esas tareas usando su sistema de ORM (Object-Relational Mapping). Te
+explico por qué paso a paso:</p>
+<p>Cuando creas un proyecto Django, en <strong>settings.py</strong> ya
+tienes configurada una base de datos por defecto:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>DATABASES <span class="op">=</span> {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;default&#39;</span>: {</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;ENGINE&#39;</span>: <span class="st">&#39;django.db.backends.sqlite3&#39;</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">&#39;NAME&#39;</span>: BASE_DIR <span class="op">/</span> <span class="st">&quot;db.sqlite3&quot;</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Eso significa que Django usará SQLite por defecto, que es un motor de
+base de datos ligero basado en archivos. Además, no necesitas instalar
+ni configurar un servidor de base de datos (como PostgreSQL o MySQL) al
+principio. Cuando ejecutas python manage.py migrate, Django crea el
+archivo db.sqlite3 automáticamente.</p>
+<p>Ahora mismo estamos trabajando en un proyecto muy pequeño, por lo que
+no es necesario configurar otro servidor de base de datos, pero lo suyo
+es usar PostsgreSQL o MySQL, más grandes y potentes.</p>
+<p>Te dejo por aquí la forma de configurar una base de datos más grande
+por si te interesa: #### Configuración de PostrgeSQL en lugar de SQLite
+- Instala el conector de PostgreSQL Primero, necesitas instalar el
+paquete que permite a Django conectarse con PostgreSQL:
+<code>pip install psycopg2-binary</code> - Crea la base de datos en
+PostgreSQL Abre psql o tu gestor favorito y ejecuta:</p>
+<pre><code>CREATE DATABASE midb;
+CREATE USER miusuario WITH PASSWORD &#39;miclave&#39;;
+ALTER ROLE miusuario SET client_encoding TO &#39;utf8&#39;;
+ALTER ROLE miusuario SET default_transaction_isolation TO &#39;read committed&#39;;
+ALTER ROLE miusuario SET timezone TO &#39;UTC&#39;;
+GRANT ALL PRIVILEGES ON DATABASE midb TO miusuario;</code></pre>
+<ul>
+<li><p>Configura settings.py de Django Abre el archivo settings.py de tu
+proyecto y busca esta sección:</p>
+<p>DATABASES = { ‘default’: { ‘ENGINE’: ‘django.db.backends.sqlite3’,
+‘NAME’: BASE_DIR / “db.sqlite3”, } }</p></li>
+</ul>
+<p>Reemplázala por:</p>
+<pre><code>DATABASES = {
+    &#39;default&#39;: {
+        &#39;ENGINE&#39;: &#39;django.db.backends.postgresql&#39;,
+        &#39;NAME&#39;: &#39;midb&#39;,
+        &#39;USER&#39;: &#39;miusuario&#39;,
+        &#39;PASSWORD&#39;: &#39;miclave&#39;,
+        &#39;HOST&#39;: &#39;localhost&#39;,
+        &#39;PORT&#39;: &#39;5432&#39;,
+    }
+}</code></pre>
+<ul>
+<li><p>Ejecuta migraciones Una vez configurado, ejecuta los siguientes
+comandos: <code>python manage.py makemigrations</code>
+<code>python manage.py migrate</code> Esto creará todas las tablas en la
+base de datos PostgreSQL que configuraste.</p></li>
+<li><p>Verifica que funciona <code>python manage.py runserver</code> ###
+2.4. Panel de Administrador de Django</p></li>
+</ul>
+<p>Una de las características más potentes de Django es su panel de
+administración automático. Es una interfaz web profesional y lista para
+usar que te permite a ti (como administrador del sitio) gestionar el
+contenido de tu aplicación. Vamos a hacer que nuestro modelo Task
+aparezca en este panel.</p>
+<h4 id="paso-1-resgistrar-el-modelo-task-en-el-admin">Paso 1: Resgistrar
+el modelo Task en el Admin</h4>
+<p>Para que un modelo sea visible y gestionable en el panel de
+administrador, tienes que registrarlo explícitamente. 1. Abre el archivo
+<strong>api/admin.py</strong> 2. Importa tu modelo Task y regístralo
+usando <strong>admin.site.register():</strong></p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># api/admin.py</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> django.contrib <span class="im">import</span> admin</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> .models <span class="im">import</span> Task <span class="co"># Importamos el modelo Task</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>admin.site.register(Task)</span></code></pre></div>
+<p>Con estas dos líneas de código, le has dicho a Django que cree una
+interfaz completa para gestionar tareas.</p>
+<h4 id="paso-2-crear-un-superusuario">Paso 2: Crear un superusuario</h4>
+<p>Para poder acceder al panel de administrador, necesitas una cuenta de
+usuario con permisos de administrador. - En tu terminal ejecuta el
+siguiente comando: <code>python manage.py createsuperuser</code></p>
+<ul>
+<li>El sistema te pedira que introduzcas: Nombre de usuario: Elige uno
+(ej: admin). Dirección de correo electrónico: Puedes poner una real o
+una de prueba. Contraseña: Escribe una contraseña. Por seguridad, no
+verás los caracteres mientras escribes. Confirmar contraseña: Vuelve a
+escribirla.</li>
+</ul>
+<p>Si todo ha ido bien, verás un mensaje de “Superuser created
+successfully.”</p>
+<h4 id="paso-3-explorar-el-panel-de-administración-de-django">Paso 3:
+Explorar el Panel de Administración de Django</h4>
+<p>Esta es la parte divertida y donde realmente puedes empezar a ver el
+potencial de Django, su escalabilidad, su robustez y el control que le
+da al desarrollador. - Levanta el servidor de desarrollo (si no lo
+tenías ya funcionando): <code>python manage.py runserver</code> - Abre
+tu navegador web y ve a la siguiente URL: http://127.0.0.1:8000/admin/ -
+Verás la página de inicio de sesión del administrador de Django. Usa el
+nombre de usuario y la contraseña que acabas de crear.</p>
+<p>¡Ya estás dentro! Verás una sección llamada “API” con un enlace a
+“Tasks”.</p>
+<p>Desde aquí, podremos directamente crear nuevas tasks, eliminarlas,
+editarlas, etc… <strong>Haz clic en “Tasks” y luego en el botón “Add
+task +” de la esquina superior derecha.</strong></p>
+<p>Puedes crear tu primera tarea usando el formulario que Django ha
+generado automáticamente a partir de tu modelo. Rellena el título, la
+descripción (si quieres) y verás cómo los campos <em>completed</em> y
+<em>created_at</em> se comportan como definimos. Esto es ideal para
+administrar tu aplicación sin necesidad de crear interfaces de gestión
+desde cero.</p>
+<p>Además, nosotros podemos personalizar nuestra interfaz de
+adminsitración para mostrar los datos que más nos interesan. Por
+ejemplo, podemos especificar que campos del modelo se muestren, los
+campos de búsqueda y los filtros que podemos aplicar. Vamos a mostrar en
+el listado de tareas los campos “title”, “completed” y “created_at”,
+vamos a decirle al panel de adminsitración que nos permita buscar las
+tareas por su campo “title” y vamos a decirle que queremos tener la
+opción de filtrar por tareas completadas.</p>
+<p>Abre tu archivo <strong>api/admin.py</strong> y modifícalo para que
+se vea así:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># api/admin.py</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> django.contrib <span class="im">import</span> admin</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> .models <span class="im">import</span> Task</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TaskAdmin(admin.ModelAdmin):</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">&quot;&quot;&quot;</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co">    Personaliza la vista de lista y el formulario de edición para el modelo Task.</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co">    &quot;&quot;&quot;</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    list_display <span class="op">=</span> (<span class="st">&#39;title&#39;</span>, <span class="st">&#39;completed&#39;</span>, <span class="st">&#39;created_at&#39;</span>)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    search_fields <span class="op">=</span> (<span class="st">&#39;title&#39;</span>,)</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    list_filter <span class="op">=</span> (<span class="st">&#39;completed&#39;</span>,)</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Registra el modelo Task con la clase de personalización TaskAdmin</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>admin.site.register(Task, TaskAdmin)</span></code></pre></div>
+<p><strong>¿Qué Has Hecho Exactamente?</strong> Al crear la clase
+<strong>TaskAdmin</strong> que hereda de
+<strong>admin.ModelAdmin</strong>, le estás diciendo a Django: “Oye,
+para el modelo Task, no uses la vista de administrador por defecto, usa
+esta configuración personalizada”.</p>
+<ul>
+<li><p>list_display &gt; Muestra estas columnas en la lista de tareas.
+Es mucho más útil que ver solo el título.</p></li>
+<li><p>search_fields &gt; Añade una barra de búsqueda en la parte
+superior que buscará por el campo title.</p></li>
+<li><p>list_filter &gt; Añade una barra lateral para filtrar rápidamente
+las tareas (por ejemplo, ver solo las completadas o las
+pendientes).</p></li>
+</ul>
+<h4 id="alternativa-con-decoradores">Alternativa con decoradores</h4>
+<p>Una forma más moderna y “Pythonica” de hacer exactamente lo mismo es
+usando un decorador. Es más conciso y muchos desarrolladores lo
+prefieren.</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode python"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># api/admin.py</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> django.contrib <span class="im">import</span> admin</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> .models <span class="im">import</span> Task</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="at">@admin.register</span>(Task)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> TaskAdmin(admin.ModelAdmin):</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    list_display <span class="op">=</span> (<span class="st">&#39;title&#39;</span>, <span class="st">&#39;completed&#39;</span>, <span class="st">&#39;created_at&#39;</span>)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    search_fields <span class="op">=</span> (<span class="st">&#39;title&#39;</span>,)</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    list_filter <span class="op">=</span> (<span class="st">&#39;completed&#39;</span>,)</span></code></pre></div>
+<p>Ambas formas son 100% correctas y funcionales. Elige la que más te
+guste.</p>
+<p>Ahora, si vuelves a ejecutar tu servidor (python manage.py runserver)
+y visitas la página de administración de Tareas, verás una interfaz
+mucho más rica y útil.</p>
+<h3 id="tu-primera-api-con-django-rest-framework">2.5. Tu Primera API
+con Django REST Framework</h3>
+<p>Django REST Framework (DRF) es un kit de herramientas que se integra
+con Django para construir APIs web de forma rápida y flexible. Se
+encarga del trabajo pesado de convertir tus datos a formato JSON,
+gestionar la autenticación, los permisos y mucho más.</p>
+<p>Nuestro objetivo: crear un endpoint (una URL de la API) en
+/api/tasks/ que devuelva una lista de todas nuestras tareas.</p>
+<h4 id="paso-1-instalar-y-configurar-drf">Paso 1: Instalar y configurar
+DRF</h4>
+<ul>
+<li><p>Detén tu servidor (si está funcionando) y, en la terminal,
+instala la librería:
+<code>pip install djangorestframework</code></p></li>
+<li><p>Ahora, al igual que hicimos con nuestra app api, debemos
+registrar DRF en nuestro proyecto. Abre mysite/settings.py y añade
+‘rest_framework’ a la lista de INSTALLED_APPS.</p>
+<pre><code>  # mysite/settings.py
+  INSTALLED_APPS = [
+      # ... otras apps
+       &#39;api&#39;,
+
+   # Apps de terceros
+   &#39;rest_framework&#39;,
+  ]</code></pre></li>
+</ul>
+<h4 id="paso-2-el-serializer-el-traductor-de-datos">Paso 2: El
+Serializer (El traductor de datos)</h4>
+<p>Un Serializer en DRF traduce datos complejos, como los objetos de
+nuestro modelo Task, a un formato que se puede enviar fácilmente por
+internet, como JSON. También hace el trabajo inverso: valida y convierte
+datos JSON en objetos de Django.</p>
+<ul>
+<li><p>Crea un nuevo archivo en tu app: api/serializers.py.</p></li>
+<li><p>Añade el siguiente código: # api/serializers.py from
+rest_framework import serializers from .models import Task</p>
+<pre><code>  class TaskSerializer(serializers.ModelSerializer):
+      class Meta:
+          model = Task
+          fields = &#39;__all__&#39; # Incluye todos los campos del modelo</code></pre></li>
+</ul>
+<p>Con ModelSerializer, DRF crea automáticamente un serializador con los
+campos que coinciden con los de nuestro modelo Task. ¡Es así de
+simple!</p>
+<h4 id="paso-3-la-vista-la-lógica-de-la-api">Paso 3: La Vista (La lógica
+de la API)</h4>
+<p>La vista se encarga de recibir una petición web y devolver una
+respuesta. Usaremos una de las “vistas genéricas” de DRF que nos ahorra
+escribir código repetitivo.</p>
+<ul>
+<li><p>Modifica tu archivo api/views.py: # api/views.py from
+rest_framework import generics from .models import Task from
+.serializers import TaskSerializer</p>
+<pre><code>  class TaskViewSet(generics.ListAPIView):
+      queryset = Task.objects.all()
+      serializer_class = TaskSerializer</code></pre></li>
+<li><p><strong>generics.ListAPIView</strong> &gt; Es una vista
+pre-construida por DRF para manejar peticiones que listan un conjunto de
+objetos.</p></li>
+<li><p><strong>queryset</strong> &gt; Le dice a la vista qué objetos
+debe obtener de la base de datos (todos los objetos Task).</p></li>
+<li><p><strong>serializer_class</strong> &gt; Le dice a la vista qué
+serializador debe usar para traducir esos objetos.</p></li>
+</ul>
+<h4 id="paso-4-la-url-la-puerta-de-entrada">Paso 4: La URL (La puerta de
+entrada)</h4>
+<p>Finalmente, necesitamos conectar una URL a la vista que acabamos de
+crear. - Crea un archivo urls.py dentro de tu app api. Este es el lugar
+correcto para las URLs específicas de la API. # api/urls.py from
+django.urls import path from .views import TaskViewSet</p>
+<pre><code>    urlpatterns = [
+        path(&#39;tasks/&#39;, TaskViewSet.as_view(), name=&#39;task-list&#39;),
+    ]</code></pre>
+<ul>
+<li><p>Ahora, dile al proyecto principal que tenga en cuenta las URLs de
+tu app api. Modifica el archivo principal mysite/urls.py:</p>
+<pre><code>  # mysite/urls.py
+  from django.contrib import admin
+  from django.urls import path, include # ¡Asegúrate de que &#39;include&#39; esté importado!
+
+  urlpatterns = [
+      path(&#39;admin/&#39;, admin.site.urls),
+      path(&#39;api/&#39;, include(&#39;api.urls&#39;)), # Incluye las URLs de la app &#39;api&#39;
+  ]</code></pre></li>
+</ul>
+<h4 id="paso-5-prueba-tu-api">Paso 5: Prueba tu API</h4>
+<ul>
+<li><p>Arranca el servidor:
+<code>python manage.py runserver</code></p></li>
+<li><p>Abre tu navegador y ve a:
+http://127.0.0.1:8000/api/tasks/</p></li>
+</ul>
+<p>Verás la Browsable API de DRF, una interfaz web que te muestra tus
+datos en formato JSON y te permite interactuar con tu API directamente
+desde el navegador. ¡Deberías ver las tareas que creaste en el panel de
+administrador!</p>
+<p>¡Lo has conseguido! Has creado tu primer endpoint de solo lectura.
+Una aplicación externa ya podría “leer” tus tareas.</p>
+<h3 id="crear-tareas-a-través-de-la-api">2.6. Crear tareas a través de
+la API</h3>
+<p>Ahora que ya podemos leer la lista de tareas (GET), el siguiente paso
+es poder crear nuevas tareas enviando datos a la API (peticiones POST).
+Gracias a Django REST Framework, esto es increíblemente sencillo.</p>
+<h4 id="paso-1-actualizar-la-vista">Paso 1: Actualizar la Vista</h4>
+<p>Solo tenemos que hacer un pequeño cambio en api/views.py. Vamos a
+cambiar la vista ListAPIView (que solo permite listar) por
+ListCreateAPIView (que permite listar y crear). - Abre tu archivo
+api/views.py. - Modifica la clase de la que hereda tu vista: #
+api/views.py from rest_framework import generics from .models import
+Task from .serializers import TaskSerializer</p>
+<pre><code>    # Cambia ListAPIView por ListCreateAPIView
+    class TaskViewSet(generics.ListCreateAPIView):
+        queryset = Task.objects.all()
+        serializer_class = TaskSerializer</code></pre>
+<h4 id="paso-2-probar-el-endpoint">Paso 2: Probar el endpoint</h4>
+<ul>
+<li>Asegúrate de que el servidor está corriendo.</li>
+<li>Refresca la página en tu navegador:
+http://127.0.0.1:8000/api/tasks/</li>
+</ul>
+<p>Ahora verás algo nuevo y muy potente: en la parte inferior de la API
+Navegable, aparecerá un formulario HTML. Puedes usar ese formulario para
+rellenar los datos de una nueva tarea y enviarla con un POST.</p>
+<p>¡Pruébalo! Crea una nueva tarea desde el navegador. Verás cómo, tras
+enviarla, la página se recarga y tu nueva tarea aparece en la lista JSON
+de arriba.</p>
+<p>¡Felicidades, tu API ahora puede leer y escribir datos!</p>
+<p>En el desarrollo de APIs, esto se conoce como CRUD (Create, Read,
+Update, Delete). Ya tenemos la “C” (Crear) y la “R” (Leer la lista).
+Ahora vamos a por la “U” (Actualizar) y la “D” (Borrar), además de leer
+un solo elemento.</p>
+<h3 id="detalle-actualización-y-borrado-crud-completo">2.7. Detalle,
+Actualización y Borrado (CRUD completo)</h3>
+<p>Para poder ver, modificar o borrar una tarea específica, necesitamos
+un nuevo “endpoint” que identifique esa tarea, como /api/tasks/1/. A
+esto se le llama una vista de detalle.</p>
+<p>DRF nos lo pone muy fácil con otra vista genérica.</p>
+<h4 id="paso-1-crear-la-vista-de-detalle">Paso 1: Crear la Vista de
+Detalle</h4>
+<p>Vamos a añadir una nueva vista en api/views.py. Esta única vista se
+encargará de recuperar (GET), actualizar (PUT/PATCH) y eliminar (DELETE)
+un objeto individual. - Abre api/views.py. - Añade esta nueva clase: #
+api/views.py from rest_framework import generics from .models import
+Task from .serializers import TaskSerializer</p>
+<pre><code>    class TaskViewSet(generics.ListCreateAPIView):
+        queryset = Task.objects.all()
+        serializer_class = TaskSerializer
+
+    # NUEVA VISTA
+    class TaskRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
+        queryset = Task.objects.all()
+        serializer_class = TaskSerializer</code></pre>
+<p>Como ves, la configuración es idéntica. DRF se encarga de la lógica
+interna para manejar un solo objeto en lugar de una lista.</p>
+<h4 id="paso-2-añadir-la-nueva-url">Paso 2: Añadir la Nueva URL</h4>
+<p>Ahora necesitamos conectar esta nueva vista a una URL que pueda
+capturar el ID de la tarea. - Abre api/urls.py. - Añade un nuevo path a
+la lista urlpatterns: # api/urls.py from django.urls import path from
+.views import TaskListCreateAPIView, TaskRetrieveUpdateDestroyAPIView #
+Importa la nueva vista</p>
+<pre><code>    urlpatterns = [
+        path(&#39;tasks/&#39;, TaskListCreateAPIView.as_view(), name=&#39;task-list-create&#39;),
+        # NUEVA RUTA
+        path(&#39;tasks/&lt;int:pk&gt;/&#39;, TaskRetrieveUpdateDestroyAPIView.as_view(), name=&#39;task-         detail&#39;),
+    ]</code></pre>
+<p>La parte clave aquí es <int:pk>. Esto le dice a Django que espere un
+número entero en esa parte de la URL y que se lo pase a la vista como un
+argumento llamado pk (de Primary Key). Así es como la vista sabe qué
+tarea específica tiene que buscar.</p>
+<h4 id="paso-3-probar-la-api-completa">Paso 3: Probar la API
+Completa</h4>
+<ul>
+<li>Asegúrate de que tu servidor está corriendo
+<code>python manage.py runserver</code></li>
+<li>Ve en tu navegador a la URL de una de las tareas que ya has creado,
+por ejemplo: http://127.0.0.1:8000/api/tasks/1/</li>
+</ul>
+<p>Ahora verás la página de la API Navegable para esa tarea individual.
+Desde ahí puedes:</p>
+<ul>
+<li>Ver sus datos en formato JSON.</li>
+<li>Usar el formulario para modificarla (PUT).</li>
+<li>Hacer clic en el botón “DELETE” para borrarla.</li>
+</ul>
+<p>¡Felicidades! Has construido una API REST completamente funcional con
+todas las operaciones CRUD. Has sentado la base fundamental sobre la que
+se construyen todas las APIs complejas.</p>
+<p>Sin embargo, este tan solo es un ejemplo creado para que podamos
+entender como funciona un CRUD en una API REST. Si queremos seguir
+buenas prácticas, hacerlo de una forma más profesional y eficiente
+podemos hacerlo de otra manera.</p>
+<h3 id="refactorizando-a-viewsets-y-routers-profesional">2.8.
+Refactorizando a ViewSets y Routers (+ profesional)</h3>
+<p>Un ViewSet es una clase que agrupa toda la lógica de un recurso (en
+nuestro caso, las Tareas). Usaremos un ModelViewSet, que nos da toda la
+funcionalidad CRUD (list, create, retrieve, update, destroy) de forma
+gratuita.</p>
+<p>Esto se combina con un Router, que genera automáticamente las URLs
+por nosotros.</p>
+<h4 id="paso-1-simplificar-las-vistas-apiviews.py">Paso 1: Simplificar
+las Vistas (api/views.py)</h4>
+<p>Sí, por supuesto. Esa es exactamente la forma más profesional y
+eficiente de hacerlo, y es el tema de esta lección.</p>
+<p>Lo que hemos hecho hasta ahora ha sido el método “manual” para que
+entendieras las piezas. Ahora, vamos a usar la herramienta que Django
+REST Framework (DRF) provee para combinar todo el CRUD en una sola
+clase: el ViewSet.</p>
+<h2 id="refactorizando-a-viewsets-y-routers">2.9: Refactorizando a
+ViewSets y Routers</h2>
+<p>Un ViewSet es una clase que agrupa toda la lógica de un recurso (en
+nuestro caso, las Tareas). Usaremos un ModelViewSet, que nos da toda la
+funcionalidad CRUD (list, create, retrieve, update, destroy) de forma
+gratuita.</p>
+<p>Esto se combina con un Router, que genera automáticamente las URLs
+por nosotros.</p>
+<h4 id="paso-1-simplificar-las-vistas-apiviews.py-1">Paso 1: Simplificar
+las Vistas (api/views.py)</h4>
+<p>Vamos a reemplazar nuestras dos clases (TaskViewSet y
+TaskRetrieveUpdateDestroyAPIView) por una sola TaskViewSet.</p>
+<ul>
+<li><p>Abre api/views.py y reemplaza todo su contenido con esto: #
+api/views.py from rest_framework import viewsets from .models import
+Task from .serializers import TaskSerializer</p>
+<pre><code>  class TaskViewSet(viewsets.ModelViewSet):
+      &quot;&quot;&quot;
+      Una única ViewSet para ver, editar y eliminar tareas.
+      &quot;&quot;&quot;
+      queryset = Task.objects.all()
+      serializer_class = TaskSerializer</code></pre></li>
+</ul>
+<p>¡Y ya está! Esta única clase ahora maneja todas las operaciones.</p>
+<h4 id="paso-2-simplificar-las-urls-apiurls.py">Paso 2: Simplificar las
+URLs (api/urls.py)</h4>
+<p>Como un ViewSet no es una vista estándar, no podemos conectarlo con
+path(). Necesitamos un Router que genere las URLs por nosotros.</p>
+<ul>
+<li><p>Abre api/urls.py y reemplaza todo su contenido con esto: #
+api/urls.py from django.urls import path, include from
+rest_framework.routers import DefaultRouter from .views import
+TaskViewSet</p>
+<pre><code>  # Crea un router y registra nuestro viewset con él.
+  router = DefaultRouter()
+  router.register(r&#39;tasks&#39;, TaskViewSet, basename=&quot;task&quot;)
+
+  # Las URLs de la API son determinadas automáticamente por el router.
+  urlpatterns = [
+      path(&#39;&#39;, include(router.urls)),
+  ]</code></pre></li>
+</ul>
+<p>Este DefaultRouter genera automáticamente las mismas dos URLs que
+creamos antes a mano:</p>
+<ul>
+<li>/tasks/ (para listar y crear)</li>
+<li>/tasks/<pk>/ (para ver, actualizar y borrar)</li>
+</ul>
+<p>¡Felicidades! Acabas de refactorizar tu código a la forma más común y
+recomendada de construir APIs con DRF. Has reemplazado dos vistas y dos
+rutas URL manuales por una ViewSet y un Router, logrando la misma
+funcionalidad con mucho menos código.</p>
+<p>Si ahora pruebas tus endpoints (http://127.0.0.1:8000/api/tasks/ y
+http://127.0.0.1:8000/api/tasks/1/), verás que todo sigue funcionando
+exactamente igual.</p>

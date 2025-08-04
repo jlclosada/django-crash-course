@@ -539,7 +539,7 @@ Sí, por supuesto. Esa es exactamente la forma más profesional y eficiente de h
 
 Lo que hemos hecho hasta ahora ha sido el método "manual" para que entendieras las piezas. Ahora, vamos a usar la herramienta que Django REST Framework (DRF) provee para combinar todo el CRUD en una sola clase: el ViewSet.
 
-## Lección 7: Refactorizando a ViewSets y Routers
+### 2.9. Refactorizando a ViewSets y Routers
 Un ViewSet es una clase que agrupa toda la lógica de un recurso (en nuestro caso, las Tareas). Usaremos un ModelViewSet, que nos da toda la funcionalidad CRUD (list, create, retrieve, update, destroy) de forma gratuita.
 
 Esto se combina con un Router, que genera automáticamente las URLs por nosotros.
@@ -588,3 +588,351 @@ Este DefaultRouter genera automáticamente las mismas dos URLs que creamos antes
 ¡Felicidades! Acabas de refactorizar tu código a la forma más común y recomendada de construir APIs con DRF. Has reemplazado dos vistas y dos rutas URL manuales por una ViewSet y un Router, logrando la misma funcionalidad con mucho menos código.
 
 Si ahora pruebas tus endpoints (http://127.0.0.1:8000/api/tasks/ y http://127.0.0.1:8000/api/tasks/1/), verás que todo sigue funcionando exactamente igual.
+
+Puede que te preguntes, por que en el titulo de nuestro endpoint en la plantilla de django rest framework aparece "Task List".
+
+La respuesta corta es que Django REST Framework (DRF) genera ese título automáticamente a partir del nombre de tu ViewSet y de la acción que se está ejecutando (list).
+
+Pero, ¿de dónde sale realmente ese título?
+DRF sigue una lógica muy simple para crear el título en la API Navegable:
+
+1. Toma el nombre de tu clase **ViewSet: TaskViewSet**.
+2. Le quita el sufijo **"ViewSet"**, quedándose con **Task**.
+3. Como la URL **/api/tasks/** muestra una lista de objetos, pluraliza el nombre a Tasks.
+4. Finalmente, añade el nombre de la acción que se está ejecutando en esa vista, que es list.
+
+El resultado es **Tasks List**.
+
+**¿Y por qué no solo "Task"?**
+El título es descriptivo de lo que hace esa página en concreto: mostrar una lista de tareas. Si navegas a la vista de detalle de una sola tarea (ej. /api/tasks/1/), verás que el título cambia a algo como Task Instance, porque en esa página estás viendo una única instancia del modelo Task.
+
+Y ahora, seguramente te estarás preguntando ¿es posible cambiarlo?
+La repuesta es **SI**.
+La mejor manera de controlar estos nombres en todo tu proyecto (incluyendo el panel de administrador de Django) es usando la clase **Meta** dentro de tu modelo.
+
+- Abre tu archivo api/models.py.
+- Añade una clase Meta a tu modelo Task:
+		# api/models.py
+		from django.db import models
+
+		class Task(models.Model):
+    		title = models.CharField(max_length=200)
+    		description = models.TextField(blank=True, null=True)
+    		completed = models.BooleanField(default=False)
+    		created_at = models.DateTimeField(auto_now_add=True)
+
+    		class Meta:
+        		verbose_name = "Tarea"
+        		verbose_name_plural = "Tareas"
+
+    		def __str__(self):
+        		return self.title
+
+Tras añadir esto y reiniciar el servidor, DRF y el admin de Django usarán estos nombres más amigables. El título principal de tu endpoint en la API Navegable ahora debería ser simplemente Tareas.
+
+Esto funcionará para el panel de adminsitración de Django, pero si quieres que directamente en la interfaz de DRF parezca el titulo que tu quieras:
+
+		class TaskViewSet(viewsets.ModelViewSet):
+    		"""
+    		Una única ViewSet para ver, editar y eliminar tareas.
+    		"""
+    		queryset = Task.objects.all()
+    		serializer_class = TaskSerializer
+    
+    		def get_view_name(self): #Añadimos este método
+        		return "Lista de Tareas" 
+
+Ahora en la interfaz de DRF, se motrará el título "Lista de tareas".
+
+## 3. Permisos y Vinculación de Datos a Usuarios
+Actualmente, tu API es completamente pública. Cualquiera que conozca la URL puede ver, crear, modificar y borrar tareas. Vamos a solucionar esto en dos fases:
+
+- Exigir que el usuario esté autenticado (haya iniciado sesión).
+- Hacer que cada usuario solo pueda ver y gestionar sus propias tareas.
+
+#### Paso 1: Exigir Autenticación en toda la API
+La forma más rápida de proteger todos tus endpoints es establecer una política de permisos por defecto en Django REST Framework.
+
+- Abre tu archivo **mysite/settings.py**.
+- Añade la siguiente configuración al final del archivo:
+
+		# mysite/settings.py
+
+		# ... (resto de tu configuración) ...
+
+		REST_FRAMEWORK = {
+    		'DEFAULT_PERMISSION_CLASSES': [
+        		'rest_framework.permissions.IsAuthenticated',
+    		]
+		}
+
+La política **IsAuthenticated** deniega el acceso a cualquier usuario anónimo. A partir de ahora, para usar la API, es obligatorio haber iniciado sesión.
+
+Para probarlo, abre una ventana de incógnito en tu navegador (para asegurarte de que no tienes la sesión iniciada) y visita http://127.0.0.1:8001/api/tasks/. Verás un error 401 Unauthorized con un mensaje como "Authentication credentials were not provided.". ¡Perfecto! La protección funciona.
+
+#### Paso 2: Vincular Tareas a Usuarios
+Ahora vamos a crear la lógica para que las tareas pertenezcan a usuarios específicos.
+
+- Modificar el Modelo:
+> Añadiremos una relación en el modelo **Task** para saber qué usuario la creó.
+
+- Abre **api/models.py** y añade el campo **owner**:
+
+		# api/models.py
+		from django.db import models
+		from django.contrib.auth.models import User # Importa el modelo User
+
+		class Task(models.Model):
+    		owner = models.ForeignKey(User, related_name='tasks', on_delete=models.CASCADE) # NUEVO CAMPO
+    		title = models.CharField(max_length=200)
+    		# ... resto de campos ...
+
+    		class Meta:
+        		verbose_name = "Tarea"
+        		verbose_name_plural = "Tareas"
+
+    		def __str__(self):
+        		return self.title
+
+- Crear y aplicar las migraciones:
+> Como hemos modificado el modelo, la base de datos necesita actualizarse.
+
+`python manage.py makemigrations`
+
+Django te preguntará qué hacer con las tareas existentes que no tienen un owner. Elige la opción 1 y proporciona el ID del superusuario que creaste (probablemente 1).
+
+`python manage.py migrate`
+- Modificar el ViewSet:
+> Finalmente, le diremos al TaskViewSet cómo debe gestionar la propiedad de las tareas.
+
+- Abre **api/views.py** y modifica tu **TaskViewSet**:
+
+```python
+# api/views.py
+from rest_framework import viewsets, permissions # Añade permissions
+from .models import Task
+from .serializers import TaskSerializer
+
+class TaskViewSet(viewsets.ModelViewSet):
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
+    # permission_classes = [permissions.IsAuthenticated] # Ya no es necesario si se puso en settings.py
+
+    def get_queryset(self):
+        """
+        Esta vista solo debe devolver las tareas del usuario autenticado.
+        """
+        return self.request.user.tasks.all()
+
+    def perform_create(self, serializer):
+        """
+        Asigna automáticamente el usuario autenticado como propietario de la nueva tarea.
+        """
+        serializer.save(owner=self.request.user)
+```
+
+- get_queryset
+> Sobrescribimos este método para que, en lugar de devolver todas las tareas, devuelva solo las del usuario que hace la petición (self.request.user).
+
+- perform_create
+> Sobrescribimos este método para que, al crear una tarea, se asigne automáticamente el owner sin necesidad de enviarlo en la petición.
+
+¡Ya está! Ahora tienes una API segura donde los usuarios solo pueden gestionar sus propios datos. Si inicias sesión con tu superusuario, solo verás las tareas que te pertenecen. Si creas otro usuario y accedes con él, verá su propia lista de tareas vacía.
+
+Has dado un salto de gigante hacia una API profesional y segura.
+
+Para poder acceder, ahora necesitas iniciar sesión. Como estamos usando el navegador, la forma más fácil es a través del panel de administrador.
+
+- Ve a la página de login del admin: http://127.0.0.1:8001/admin/
+- Inicia sesión con tu cuenta de superusuario.
+- Una vez dentro, en la misma pestaña del navegador, vuelve a la URL de la API: http://127.0.0.1:8001/api/tasks/
+- Verás que ahora sí te funciona. Esto ocurre porque tu navegador envía la cookie de sesión junto con la petición, y Django REST Framework te reconoce como un usuario autenticado.
+
+Tu API ya es segura para usuarios que interactúan a través de un navegador. Pero el objetivo es que un frontend (hecho en React, Vue, etc.) o una app móvil se conecte a ella. Estos clientes no usan el sistema de sesiones y cookies de un navegador. Necesitan un método de autenticación estándar para APIs: Tokens.
+
+### 3.1. Autenticación por Token
+Un token de autenticación es una clave secreta que un cliente (como una app de JavaScript) envía en cada petición para demostrar quién es. Vamos a habilitar este sistema en nuestra API.
+
+#### Paso 1: Añadir la App de Tokens de DRF
+Django REST Framework incluye una app para gestionar tokens.
+
+- Abre tu archivo **mysite/settings.py**.
+- Añade **'rest_framework.authtoken'** a tu lista de INSTALLED_APPS:
+
+```python
+# mysite/settings.py
+INSTALLED_APPS = [
+    # ... otras apps
+    'api',
+    'rest_framework',
+    'rest_framework.authtoken', # <-- AÑADIR ESTA LÍNEA
+]
+```
+
+#### Paso 2: Actulizar la base de datos
+La nueva app necesita crear una tabla en la base de datos para almacenar los tokens.
+
+En tu terminal, ejecuta el comando migrate:
+`python manage.py migrate`
+
+#### Paso 3: Generar un Token para tu Usuario
+Cada usuario que necesite acceder a la API de esta forma necesitará un token. Vamos a generar uno para tu superusuario.
+
+- En la terminal, ejecuta el siguiente comando, reemplazando <username> con el nombre de tu superusuario (probablemente admin):
+`python manage.py drf_create_token <username>`
+
+Verás una respuesta como: **Generated token 9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b for user admin.**
+
+Copia ese token. Es como una contraseña, trátalo con cuidado.
+
+#### Paso 4: Añadir tipo de autenticación a DRF
+Debemos añadir TokenAuthentication a la configuración de DRF en tu archivo de settings.py.
+
+- Abre tu archivo mysite/settings.py.
+- Busca el diccionario REST_FRAMEWORK que añadimos antes y modifícalo para que incluya las clases de autenticación:
+
+```python
+# mysite/settings.py
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    # AÑADIR ESTO
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+}
+```
+
+- SessionAuthentication
+> Mantenemos esta para que puedas seguir usando la API Navegable desde el navegador después de iniciar sesión en el admin.
+
+- TokenAuthentication
+> Esto le dice a DRF que también debe buscar una cabecera Authorization: Token ... en las peticiones.
+
+#### Paso 4: Probar la API con el Token
+No podemos probar esto fácilmente desde el navegador. Usaremos una herramienta de línea de comandos llamada curl, que sirve para hacer peticiones HTTP.
+
+- Abre una nueva terminal (no la que está ejecutando el servidor).
+- Escribe el siguiente comando, reemplazando <tu_token_copiado> con el token que acabas de generar:
+`curl -X GET http://127.0.0.1:8001/api/tasks/ -H "Authorization: Token <tu_token_copiado>"`
+
+- **-X GET**: Especifica que es una petición GET.
+- **-H "Authorization**: Token ...": Envía una cabecera (Header) de Authorization con tu token. Esta es la forma estándar de autenticarse en una API REST.
+
+Si todo ha ido bien, deberías ver la lista de tus tareas en formato JSON directamente en la terminal.
+
+¡Felicidades! Tu API ahora está lista para ser consumida por cualquier tipo de cliente externo, no solo un navegador. Este es un paso fundamental para crear un backend profesional. El siguiente paso lógico es documentar nuestra API para que los desarrolladores de frontend sepan cómo usarla.
+
+
+## 4. Documentación con Swagger UI
+Usaremos una de las herramientas más populares, Swagger UI, que genera una página web interactiva donde se puede explorar y probar la API. Lo haremos con un paquete llamado drf-spectacular.
+
+#### Paso 1: Instalar el paquete
+- En tu terminal, instala la librería:
+`pip install drf-spectacular`
+
+#### Paso 2: Configura el proyecto
+- Abre mysite/settings.py.
+- Añade 'drf_spectacular' a tu lista de INSTALLED_APPS:
+
+```python
+# mysite/settings.py
+INSTALLED_APPS = [
+    # ...
+    'rest_framework.authtoken',
+    'drf_spectacular', # <-- AÑADIR ESTA LÍNEA
+]
+```
+
+- Ahora, añade esta línea a tu diccionario REST_FRAMEWORK para que DRF sepa cómo generar el esquema de la API:
+
+```python
+# mysite/settings.py
+REST_FRAMEWORK = {
+    # ...
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        # ...
+    ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema', # <-- AÑADIR ESTA LÍNEA
+}
+```
+
+- Finalmente, al final del archivo settings.py, añade un título y versión para tu API:
+
+```python
+# mysite/settings.py
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'API de Tareas',
+    'DESCRIPTION': 'Una API simple para gestionar una lista de tareas.',
+    'VERSION': '1.0.0',
+}
+```
+
+#### Paso 3: Añadir las URLs de la Documentación
+Necesitamos añadir las rutas para que se pueda acceder a la página de Swagger.
+
+- Abre el archivo principal de URLs, mysite/urls.py.
+- Importa las vistas necesarias y añade las rutas para el esquema y la UI:
+
+```python
+# mysite/urls.py
+from django.contrib import admin
+from django.urls import path, include
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView # <-- IMPORTAR
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('api/', include('api.urls')),
+
+    # Rutas de la Documentación
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+]
+```
+
+#### Paso 4: Explora la documentación
+
+- Asegúrate de que tu servidor esté corriendo.
+- Visita la siguiente URL en tu navegador: http://127.0.0.1:8001/api/schema/swagger-ui/
+
+¡Y ahí la tienes! Verás una página de Swagger UI generada automáticamente que documenta tus endpoints de /api/tasks/. Puedes desplegar cada uno para ver los métodos (GET, POST, etc.), los parámetros esperados y las posibles respuestas.
+
+Incluso puedes probarla:
+
+- Haz clic en el botón verde "Authorize".
+- En el campo Value, pega tu token de autenticación que generaste antes, precedido por la palabra Token  (ej: Token 9944b09...).
+
+Ahora puedes usar el botón "Try it out" en cualquier endpoint para hacer peticiones reales a tu API directamente desde la documentación.
+
+Felicidades, has completado el ciclo para crear una API REST profesional, funcional, segura y documentada.
+
+Si la URL para acceder a la documentación de Swagger te parece complicada y la quieres personalizar, puedes hacerlo.
+- Modifica tu archivo mysite/urls.py de la siguiente manera:
+
+```python
+# mysite/urls.py
+from django.contrib import admin
+from django.urls import path, include
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('api/', include('api.urls')),
+
+    # Ruta para el archivo de schema (esto no se cambia)
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+
+    # La ruta para la documentación de Swagger UI, ahora en /swagger/
+    path('swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+]
+```
+
+¿Qué es lo que hemos hecho?
+- Cambiamos path('api/schema/swagger-ui/', ...) por path('swagger/', ...).
+- Mantuvimos url_name='schema' para que la vista de Swagger sepa que debe usar la ruta llamada 'schema' para obtener los datos de la API.
+
+Ahora, si guardas el archivo, puedes acceder a tu documentación directamente en: http://127.0.0.1:8000/swagger/
+
